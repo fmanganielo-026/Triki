@@ -1,0 +1,830 @@
+/* ==========================================================================
+   TRIKI ARCADE — styles.css
+   --------------------------------------------------------------------------
+   ÍNDICE
+   1. Variables de color
+   2. Base y fondo
+   3. Cabecera y título
+   4. Paneles
+   5. Botones y controles segmentados (modo / dificultad)
+   6. Estado del juego y turno
+   7. Tablero y casillas
+   8. Marcador
+   9. Historial
+   10. Animaciones
+   11. Responsive
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. VARIABLES DE COLOR
+   Cambia aquí la paleta completa del juego.
+   -------------------------------------------------------------------------- */
+:root {
+  --bg-0: #06030f; /* fondo más oscuro */
+  --bg-1: #120a2e; /* morado oscuro */
+  --bg-2: #0a1233; /* azul oscuro */
+
+  --panel: rgba(19, 14, 45, 0.72);
+  --panel-border: rgba(123, 92, 255, 0.28);
+
+  --neon-x: #2ee6ff; /* Jugador X  → cyan */
+  --neon-o: #ff3fa4; /* Jugador O  → magenta */
+  --neon-win: #4dff91; /* Ganador    → verde neón */
+  --neon-draw: #ffd84d; /* Empate     → amarillo */
+  --neon-accent: #7b5cff; /* Acentos / botones → violeta */
+
+  --text: #eef0ff;
+  --text-dim: #a9a7d6;
+
+  --radius: 16px;
+  --radius-sm: 12px;
+  --shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+}
+
+/* --------------------------------------------------------------------------
+   2. BASE Y FONDO
+   -------------------------------------------------------------------------- */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  overflow-x: hidden; /* nunca scroll horizontal en móvil */
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  background:
+    radial-gradient(
+      900px 520px at 15% -10%,
+      rgba(123, 92, 255, 0.3),
+      transparent 60%
+    ),
+    radial-gradient(
+      760px 480px at 100% 0%,
+      rgba(46, 230, 255, 0.18),
+      transparent 55%
+    ),
+    radial-gradient(
+      700px 600px at 50% 120%,
+      rgba(255, 63, 164, 0.16),
+      transparent 60%
+    ),
+    linear-gradient(160deg, var(--bg-2) 0%, var(--bg-1) 45%, var(--bg-0) 100%);
+  background-attachment: fixed;
+}
+
+/* Rejilla sutil al estilo arcade (solo decoración) */
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.25;
+  background-image:
+    linear-gradient(rgba(123, 92, 255, 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(123, 92, 255, 0.16) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mask-image: radial-gradient(circle at 50% 35%, #000 0%, transparent 78%);
+  -webkit-mask-image: radial-gradient(
+    circle at 50% 35%,
+    #000 0%,
+    transparent 78%
+  );
+}
+
+.app {
+  position: relative;
+  padding-top: clamp(18px, 4vw, 40px);
+  padding-bottom: 30px;
+}
+
+/* --------------------------------------------------------------------------
+   3. CABECERA Y TÍTULO
+   -------------------------------------------------------------------------- */
+.app-header {
+  position: relative;
+  margin-bottom: clamp(18px, 3vw, 30px);
+}
+
+.app-title {
+  margin: 0;
+  font-size: clamp(2rem, 7vw, 3.25rem);
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-shadow: 0 0 18px rgba(46, 230, 255, 0.35);
+}
+
+.app-title .neon-x {
+  color: var(--neon-x);
+  text-shadow:
+    0 0 10px rgba(46, 230, 255, 0.75),
+    0 0 34px rgba(46, 230, 255, 0.45);
+}
+
+.app-subtitle {
+  margin: 8px 0 0;
+  color: var(--text-dim);
+  font-size: clamp(0.8rem, 2.6vw, 0.95rem);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Botón de sonido (esquina superior) */
+.sound-btn {
+  position: absolute;
+  top: -4px;
+  right: 0;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--neon-x);
+  background: rgba(46, 230, 255, 0.08);
+  border: 1px solid rgba(46, 230, 255, 0.35);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.sound-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(46, 230, 255, 0.16);
+  box-shadow: 0 0 16px rgba(46, 230, 255, 0.35);
+}
+
+.sound-btn.is-off {
+  color: var(--text-dim);
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* --------------------------------------------------------------------------
+   4. PANELES
+   -------------------------------------------------------------------------- */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  padding: clamp(16px, 3vw, 24px);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.panel + .panel {
+  margin-top: 20px;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.panel-title i {
+  color: var(--neon-accent);
+}
+
+.panel-subtitle {
+  margin: 18px 0 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* --------------------------------------------------------------------------
+   5. BOTONES Y CONTROLES SEGMENTADOS
+   -------------------------------------------------------------------------- */
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.segmented--sm {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.seg-btn {
+  padding: 11px 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.seg-btn:hover {
+  color: var(--text);
+  border-color: rgba(123, 92, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+.seg-btn.active {
+  color: #0a0620;
+  background: linear-gradient(135deg, var(--neon-x), var(--neon-accent));
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(46, 230, 255, 0.28);
+}
+
+.seg-btn:focus-visible,
+.btn:focus-visible,
+.cell:focus-visible,
+.sound-btn:focus-visible {
+  outline: 2px solid var(--neon-x);
+  outline-offset: 3px;
+}
+
+/* Caja de dificultad */
+.difficulty-box {
+  animation: fadeIn 0.3s ease both;
+}
+
+.difficulty-info {
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.difficulty-info strong {
+  color: var(--neon-x);
+}
+
+/* Botones genéricos */
+.btn {
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 11px 22px;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.btn-neon {
+  color: #07031a;
+  background: linear-gradient(
+    135deg,
+    var(--neon-x) 0%,
+    var(--neon-accent) 55%,
+    var(--neon-o) 100%
+  );
+  border: none;
+  box-shadow: 0 8px 24px rgba(123, 92, 255, 0.35);
+}
+
+.btn-neon:hover {
+  color: #07031a;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(46, 230, 255, 0.4);
+}
+
+.btn-ghost {
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.btn-ghost:hover {
+  color: var(--neon-draw);
+  background: rgba(255, 216, 77, 0.08);
+  border-color: rgba(255, 216, 77, 0.5);
+}
+
+.board-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(16px, 3vw, 22px);
+}
+
+/* --------------------------------------------------------------------------
+   6. ESTADO DEL JUEGO Y TURNO
+   -------------------------------------------------------------------------- */
+.status-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 52px;
+  padding: 10px 16px;
+  margin-bottom: 14px;
+  text-align: center;
+  font-size: clamp(1rem, 4.4vw, 1.35rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  transition:
+    color 0.25s ease,
+    background 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.status-box.is-turn-x {
+  color: var(--neon-x);
+  background: rgba(46, 230, 255, 0.08);
+  border-color: rgba(46, 230, 255, 0.35);
+}
+
+.status-box.is-turn-o {
+  color: var(--neon-o);
+  background: rgba(255, 63, 164, 0.08);
+  border-color: rgba(255, 63, 164, 0.35);
+}
+
+.status-box.is-thinking {
+  color: var(--text);
+  background: rgba(123, 92, 255, 0.12);
+  border-color: rgba(123, 92, 255, 0.45);
+}
+
+.status-box.is-win {
+  color: var(--neon-win);
+  background: rgba(77, 255, 145, 0.1);
+  border-color: rgba(77, 255, 145, 0.55);
+  box-shadow: 0 0 22px rgba(77, 255, 145, 0.25);
+  animation: winFlash 0.7s ease both;
+}
+
+.status-box.is-draw {
+  color: var(--neon-draw);
+  background: rgba(255, 216, 77, 0.1);
+  border-color: rgba(255, 216, 77, 0.5);
+}
+
+/* Puntos de "pensando..." */
+.thinking-dots {
+  display: none;
+  gap: 5px;
+}
+
+.status-box.is-thinking .thinking-dots {
+  display: inline-flex;
+}
+
+.thinking-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--neon-accent);
+  animation: dotBounce 1s infinite ease-in-out;
+}
+.thinking-dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.thinking-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* Indicador de turno */
+.turn-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: clamp(14px, 3vw, 20px);
+  transition: opacity 0.3s ease;
+}
+
+.turn-indicator.is-over {
+  opacity: 0.35;
+}
+
+.turn-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.turn-symbol {
+  display: inline-grid;
+  place-items: center;
+  min-width: 46px;
+  height: 46px;
+  padding: 0 10px;
+  font-size: 1.5rem;
+  font-weight: 900;
+  border-radius: 12px;
+  border: 1px solid transparent;
+}
+
+.turn-symbol.sym-x {
+  color: var(--neon-x);
+  background: rgba(46, 230, 255, 0.12);
+  border-color: rgba(46, 230, 255, 0.45);
+  text-shadow: 0 0 12px rgba(46, 230, 255, 0.7);
+}
+
+.turn-symbol.sym-o {
+  color: var(--neon-o);
+  background: rgba(255, 63, 164, 0.12);
+  border-color: rgba(255, 63, 164, 0.45);
+  text-shadow: 0 0 12px rgba(255, 63, 164, 0.7);
+}
+
+.turn-symbol.is-changing {
+  animation: turnSwap 0.4s ease both;
+}
+
+/* --------------------------------------------------------------------------
+   7. TABLERO Y CASILLAS
+   -------------------------------------------------------------------------- */
+.board-panel {
+  text-align: center;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(8px, 2.4vw, 14px);
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  padding: clamp(10px, 2.6vw, 16px);
+  background: rgba(8, 5, 24, 0.55);
+  border: 1px solid rgba(123, 92, 255, 0.3);
+  border-radius: var(--radius);
+  box-shadow: inset 0 0 34px rgba(123, 92, 255, 0.16);
+}
+
+.cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+  font-family: inherit;
+  font-size: clamp(2rem, 11vw, 3.6rem);
+  font-weight: 900;
+  line-height: 1;
+  color: transparent;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+/* Hover: solo en casillas jugables */
+.cell.is-empty:hover {
+  background: rgba(123, 92, 255, 0.16);
+  border-color: rgba(46, 230, 255, 0.55);
+  transform: translateY(-3px);
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.4),
+    0 0 16px rgba(46, 230, 255, 0.2);
+}
+
+/* Símbolos X y O */
+.cell.sym-x {
+  color: var(--neon-x);
+  text-shadow:
+    0 0 14px rgba(46, 230, 255, 0.75),
+    0 0 34px rgba(46, 230, 255, 0.35);
+  cursor: default;
+}
+
+.cell.sym-o {
+  color: var(--neon-o);
+  text-shadow:
+    0 0 14px rgba(255, 63, 164, 0.75),
+    0 0 34px rgba(255, 63, 164, 0.35);
+  cursor: default;
+}
+
+.cell.has-symbol {
+  animation: popIn 0.3s ease both;
+}
+
+/* Casillas ganadoras */
+.cell.is-winner {
+  color: var(--neon-win) !important;
+  background: rgba(77, 255, 145, 0.12);
+  border-color: rgba(77, 255, 145, 0.75);
+  text-shadow: 0 0 16px rgba(77, 255, 145, 0.85);
+  box-shadow: 0 0 24px rgba(77, 255, 145, 0.4);
+  animation: winPulse 0.85s ease-in-out infinite alternate;
+}
+
+/* El tablero "piensa" mientras juega la CPU */
+.board.is-busy .cell {
+  opacity: 0.6;
+}
+.board.is-busy .cell.is-winner {
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   8. MARCADOR
+   -------------------------------------------------------------------------- */
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.score-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 6px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.score-symbol {
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.score-symbol.draw {
+  font-size: 0.75rem;
+  color: var(--neon-draw);
+}
+
+.score-value {
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+
+.score-card--x {
+  border-color: rgba(46, 230, 255, 0.35);
+}
+.score-card--x .score-symbol {
+  color: var(--neon-x);
+}
+.score-card--x .score-value {
+  color: var(--neon-x);
+}
+
+.score-card--o {
+  border-color: rgba(255, 63, 164, 0.35);
+}
+.score-card--o .score-symbol {
+  color: var(--neon-o);
+}
+.score-card--o .score-value {
+  color: var(--neon-o);
+}
+
+.score-card--draw .score-value {
+  color: var(--neon-draw);
+}
+
+/* --------------------------------------------------------------------------
+   9. HISTORIAL
+   -------------------------------------------------------------------------- */
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--neon-accent) transparent;
+}
+
+.history-list::-webkit-scrollbar {
+  width: 6px;
+}
+.history-list::-webkit-scrollbar-thumb {
+  background: rgba(123, 92, 255, 0.55);
+  border-radius: 999px;
+}
+
+.history-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 0.87rem;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-left: 3px solid var(--neon-accent);
+  border-radius: 10px;
+  animation: slideIn 0.3s ease both;
+}
+
+.history-list li.is-x {
+  color: var(--neon-x);
+  border-left-color: var(--neon-x);
+}
+.history-list li.is-o {
+  color: var(--neon-o);
+  border-left-color: var(--neon-o);
+}
+.history-list li.is-start {
+  border-left-color: var(--text-dim);
+  font-style: italic;
+}
+.history-list li.is-end {
+  border-left-color: var(--neon-win);
+  color: var(--neon-win);
+  font-weight: 700;
+}
+.history-list li.is-end.is-draw-end {
+  border-left-color: var(--neon-draw);
+  color: var(--neon-draw);
+}
+
+.history-empty {
+  color: var(--text-dim) !important;
+  border-left-color: rgba(255, 255, 255, 0.2) !important;
+  font-style: italic;
+}
+
+/* --------------------------------------------------------------------------
+   10. ANIMACIONES
+   -------------------------------------------------------------------------- */
+@keyframes popIn {
+  0% {
+    transform: scale(0.35) rotate(-12deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12) rotate(4deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes winPulse {
+  from {
+    transform: scale(1);
+    box-shadow: 0 0 14px rgba(77, 255, 145, 0.3);
+  }
+  to {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(77, 255, 145, 0.55);
+  }
+}
+
+@keyframes winFlash {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes turnSwap {
+  0% {
+    transform: scale(0.6) rotate(-20deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15) rotate(6deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+
+@keyframes dotBounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  40% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    transform: translateY(-6px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Preferencia de movimiento reducido (accesibilidad) */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   11. RESPONSIVE
+   -------------------------------------------------------------------------- */
+@media (max-width: 991.98px) {
+  .history-list {
+    max-height: 200px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .app {
+    padding-top: 16px;
+  }
+
+  .app-title {
+    letter-spacing: 0.1em;
+  }
+
+  .sound-btn {
+    width: 38px;
+    height: 38px;
+    right: 4px;
+  }
+
+  .seg-btn {
+    font-size: 0.85rem;
+    padding: 10px 8px;
+  }
+
+  .score-value {
+    font-size: 1.3rem;
+  }
+
+  .btn {
+    width: 100%;
+  }
+  .board-actions .btn {
+    width: auto;
+    min-width: 200px;
+  }
+}
+
+/* Texto seleccionable de forma mínima para no molestar al jugar */
+.cell {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
